@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EU_TERMINAL // MATRIX_RELOADED</title>
+    <style>
+        body {
+            background-color: black;
+            color: #0F0; /* Klasik Matrix Yeşili */
+            font-family: 'Courier New', Courier, monospace; /* Monospace yazı tipi */
+            margin: 0;
+            overflow: hidden; /* Kaydırma çubuklarını gizle */
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Arka plandaki akan karakterler */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Ön plandaki terminal metni */
+        #terminal-overlay {
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            pointer-events: none; /* Metne tıklanamasın, arkadaki Matrix aksın */
+        }
+
+        .header {
+            font-weight: bold;
+            text-shadow: 0 0 5px #0F0;
+        }
+
+        .log-entry {
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        /* Yanıp sönen imleç efekti */
+        #cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background-color: #0F0;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <div id="terminal-overlay">
+        <div class="header">>>> ERDAL ÜSTÜNOL // MATRIX_TERMINAL_v2.0.26 <<<</div>
+        <div class="log-entry">Uzak sunucuya bağlanılıyor: 192.168.1.1...</div>
+        <div id="terminal-content"></div>
+        <div class="log-entry">Kök dizine erişim sağlandı. <span id="cursor"></span></div>
+    </div>
+
+    <script>
+        // --- Matrix Yağmuru Efekti ---
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ekranı tam kapla
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Karakter seti (Katakana + Latin + Sayılar)
+        const alphabet = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        // Her sütun için bir başlangıç Y koordinatı ata
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            // Arka planı hafifçe karartarak "iz" efekti oluştur
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#0F0"; // Yeşil yazı
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                // Rastgele bir karakter seç
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                // Karakteri çiz
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                // Ekranda aşağı kaydır
+                drops[i]++;
+
+                // Ekranın altına ulaştığında rastgele olarak başa döndür
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+            }
+        }
+
+        // --- Sahte Terminal Logları ---
+        const terminalContent = document.getElementById('terminal-content');
+        const logs = [
+            "Hata ayıklama modülü başlatıldı.",
+            "Bypass ediliyor: Güvenlik Duvarı_v4.5...",
+            "[BAŞARILI] El sıkışma tamamlandı.",
+            "Kripto anahtarı deşifre ediliyor...",
+            ">> Veritabanı sızıntısı: Kullanıcı_Tablosu",
+            "Sistem çekirdeğine erişim istendi.",
+            "[UYARI] İzinsiz erişim algılandı.",
+            "IP Gizleniyor... [Tamamlandı]",
+            "3D Model verileri çekiliyor...",
+            "Batch Script çalıştırılıyor: auto_clean.bat",
+            "Ana sunucu kontrolü ele geçirildi."
+        ];
+
+        let logIndex = 0;
+        function addTerminalLog() {
+            if (logIndex < logs.length) {
+                const newLog = document.createElement('div');
+                newLog.className = 'log-entry';
+                newLog.innerHTML = `<span style="color: #5F5;">[${new Date().toLocaleTimeString()}]</span> ${logs[logIndex]}`;
+                terminalContent.appendChild(newLog);
+                logIndex++;
+                
+                // Sayfa çok dolarsa eski logları temizle (opsiyonel, Matrix efekti için gerek yok)
+                if (terminalContent.children.length > 10) {
+                    terminalContent.removeChild(terminalContent.firstChild);
+                }
+                
+                // Rastgele aralıklarla yeni log ekle
+                setTimeout(addTerminalLog, Math.random() * 2000 + 500); 
+            } else {
+                // Loglar biterse döngüye sok (Hack hiç bitmez!)
+                logIndex = 0;
+                setTimeout(addTerminalLog, 3000);
+            }
+        }
+
+        // Efektleri başlat
+        setInterval(drawMatrix, 33); // Saniyede ~30 kare
+        addTerminalLog(); // Terminal loglarını başlat
+
+        // Ekran boyutu değişirse canvas'ı yeniden ayarla
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Sütun sayısını yeniden hesapla
+            const columns = canvas.width / fontSize;
+            drops.length = 0;
+            for (let x = 0; x < columns; x++) {
+                drops[x] = 1;
+            }
+        });
+
+    </script>
+</body>
+</html>
