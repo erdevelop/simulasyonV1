@@ -2,173 +2,149 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EU_TERMINAL // MATRIX_RELOADED</title>
+    <title>EU_TERMINAL // INTERACTIVE_OS</title>
     <style>
-        body {
-            background-color: black;
-            color: #0F0; /* Klasik Matrix Yeşili */
-            font-family: 'Courier New', Courier, monospace; /* Monospace yazı tipi */
-            margin: 0;
-            overflow: hidden; /* Kaydırma çubuklarını gizle */
-            display: flex;
-            height: 100vh;
-        }
+        body { background: black; margin: 0; overflow: hidden; font-family: 'Courier New', monospace; }
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: 1; opacity: 0.6; }
 
-        /* Arka plandaki akan karakterler */
-        #matrix-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* Ön plandaki terminal metni */
-        #terminal-overlay {
-            position: relative;
+        /* Terminal Penceresi */
+        #terminal-window {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; height: 70%;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #0F0;
+            box-shadow: 0 0 20px #0F0;
             z-index: 2;
-            padding: 20px;
-            pointer-events: none; /* Metne tıklanamasın, arkadaki Matrix aksın */
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
         }
 
-        .header {
-            font-weight: bold;
-            text-shadow: 0 0 5px #0F0;
+        #output {
+            flex-grow: 1;
+            overflow-y: auto;
+            color: #0F0;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin-bottom: 10px;
         }
 
-        .log-entry {
-            margin-top: 5px;
-            opacity: 0.9;
+        .input-line { display: flex; color: #0F0; font-size: 16px; }
+        #cmd-input {
+            background: transparent;
+            border: none;
+            color: #0F0;
+            outline: none;
+            flex-grow: 1;
+            font-family: inherit;
+            font-size: inherit;
         }
 
-        /* Yanıp sönen imleç efekti */
-        #cursor {
-            display: inline-block;
-            width: 10px;
-            height: 1.2em;
-            background-color: #0F0;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
+        /* Scrollbar güzelleştirme */
+        #output::-webkit-scrollbar { width: 5px; }
+        #output::-webkit-scrollbar-thumb { background: #0F0; }
     </style>
 </head>
 <body>
 
-    <canvas id="matrix-canvas"></canvas>
+<canvas id="matrix-canvas"></canvas>
 
-    <div id="terminal-overlay">
-        <div class="header">>>> ERDAL ÜSTÜNOL // MATRIX_TERMINAL_v2.0.26 <<<</div>
-        <div class="log-entry">Uzak sunucuya bağlanılıyor: 192.168.1.1...</div>
-        <div id="terminal-content"></div>
-        <div class="log-entry">Kök dizine erişim sağlandı. <span id="cursor"></span></div>
+<div id="terminal-window" onclick="document.getElementById('cmd-input').focus();">
+    <div id="output">EU_OS [Sürüm 2.0.26]
+(c) Erdal Üstünol. Tüm hakları saklıdır.
+Komut listesi için 'help' yazın.
+
+</div>
+    <div class="input-line">
+        <span>C:\Users\Erdal></span>
+        <input type="text" id="cmd-input" autofocus autocomplete="off" spellcheck="false">
     </div>
+</div>
 
-    <script>
-        // --- Matrix Yağmuru Efekti ---
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Ekranı tam kapla
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        // Karakter seti (Katakana + Latin + Sayılar)
-        const alphabet = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        
-        const fontSize = 16;
-        const columns = canvas.width / fontSize;
-        const drops = [];
-
-        // Her sütun için bir başlangıç Y koordinatı ata
-        for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
-        }
-
-        function drawMatrix() {
-            // Arka planı hafifçe karartarak "iz" efekti oluştur
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = "#0F0"; // Yeşil yazı
-            ctx.font = fontSize + "px monospace";
-
-            for (let i = 0; i < drops.length; i++) {
-                // Rastgele bir karakter seç
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                // Karakteri çiz
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                // Ekranda aşağı kaydır
-                drops[i]++;
-
-                // Ekranın altına ulaştığında rastgele olarak başa döndür
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
-            }
-        }
-
-        // --- Sahte Terminal Logları ---
-        const terminalContent = document.getElementById('terminal-content');
-        const logs = [
-            "Hata ayıklama modülü başlatıldı.",
-            "Bypass ediliyor: Güvenlik Duvarı_v4.5...",
-            "[BAŞARILI] El sıkışma tamamlandı.",
-            "Kripto anahtarı deşifre ediliyor...",
-            ">> Veritabanı sızıntısı: Kullanıcı_Tablosu",
-            "Sistem çekirdeğine erişim istendi.",
-            "[UYARI] İzinsiz erişim algılandı.",
-            "IP Gizleniyor... [Tamamlandı]",
-            "3D Model verileri çekiliyor...",
-            "Batch Script çalıştırılıyor: auto_clean.bat",
-            "Ana sunucu kontrolü ele geçirildi."
-        ];
-
-        let logIndex = 0;
-        function addTerminalLog() {
-            if (logIndex < logs.length) {
-                const newLog = document.createElement('div');
-                newLog.className = 'log-entry';
-                newLog.innerHTML = `<span style="color: #5F5;">[${new Date().toLocaleTimeString()}]</span> ${logs[logIndex]}`;
-                terminalContent.appendChild(newLog);
-                logIndex++;
-                
-                // Sayfa çok dolarsa eski logları temizle (opsiyonel, Matrix efekti için gerek yok)
-                if (terminalContent.children.length > 10) {
-                    terminalContent.removeChild(terminalContent.firstChild);
-                }
-                
-                // Rastgele aralıklarla yeni log ekle
-                setTimeout(addTerminalLog, Math.random() * 2000 + 500); 
-            } else {
-                // Loglar biterse döngüye sok (Hack hiç bitmez!)
-                logIndex = 0;
-                setTimeout(addTerminalLog, 3000);
-            }
-        }
-
-        // Efektleri başlat
-        setInterval(drawMatrix, 33); // Saniyede ~30 kare
-        addTerminalLog(); // Terminal loglarını başlat
-
-        // Ekran boyutu değişirse canvas'ı yeniden ayarla
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            // Sütun sayısını yeniden hesapla
-            const columns = canvas.width / fontSize;
-            drops.length = 0;
-            for (let x = 0; x < columns; x++) {
-                drops[x] = 1;
-            }
+<script>
+    // --- MATRIX ARKAPLAN (Önceki ile aynı) ---
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
+        drops.forEach((y, i) => {
+            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            ctx.fillText(text, i * fontSize, y * fontSize);
+            if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
         });
+    }
+    setInterval(drawMatrix, 35);
 
-    </script>
+    // --- TERMİNAL MANTIĞI ---
+    const input = document.getElementById('cmd-input');
+    const output = document.getElementById('output');
+
+    const commands = {
+        "help": "Kullanılabilir komutlar:\nhelp, clear, date, time, whoami, status, 3d, python, batch, ipek, contact, weather, projects, calc, color, echo, system, matrix, news, secret, shutdown",
+        "clear": "CLS",
+        "date": () => new Date().toLocaleDateString(),
+        "time": () => new Date().toLocaleTimeString(),
+        "whoami": "Kullanıcı: Erdal Üstünol\nMeslek: 3D Tasarım Uzmanı (30 Yıl Deneyim)\nYetkinlik: SolidWorks, AutoCAD, Rhino, Python",
+        "status": "Sistem Durumu: Çevrimiçi\nCPU: %12\nBellek: 64GB DDR5\nBağlantı: Şifreli (AES-256)",
+        "3d": "3D Modül Başlatılıyor...\nRender motoru aktif.\nSolidWorks dosyaları taranıyor...",
+        "python": "Python 3.12.0 interpretter hazır.\n>>> print('Merhaba Dünya')",
+        "batch": "Toplu işlem dosyası çalıştırılıyor: backup_archive.bat\nKopyalanıyor... %100",
+        "ipek": "Mesaj: Merhaba İpek! Baban seni çok seviyor. ❤️",
+        "contact": "E-posta: info@erdalustunol.com\nWeb: erdalustunol.com",
+        "weather": "İstanbul: 18°C, Hava Parçalı Bulutlu.",
+        "projects": "1. Pasifik Raf Sistemleri Optimizasyonu\n2. Python ile Parametrik Tasarım Otomasyonu\n3. Akıllı Ev Dekorasyon Panelleri",
+        "calc": "Kullanım: calc [sayı1] [işlem] [sayı2] (Örn: calc 5 * 10)",
+        "color": "Renk paleti güncellendi (Sadece yeşil destekleniyor!).",
+        "echo": "Lütfen tekrarlamamı istediğiniz metni yazın.",
+        "system": "OS: EU-DOS v2.0\nKernel: 6.2.0-generic-30-year-xp",
+        "matrix": "Sinyal güçlendiriliyor... Matrisin içindesin.",
+        "news": "2026 Manşeti: AI destekli 3D tasarım standart haline geldi.",
+        "secret": "Gizli Mesaj: Kaşığa bakma, kaşık aslında yok.",
+        "shutdown": "Sistem kapatılıyor... (Şaka yaptım, buradayım!)"
+    };
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const fullCmd = input.value.trim().toLowerCase();
+            const args = fullCmd.split(' ');
+            const cmd = args[0];
+            
+            printToTerminal(`\nC:\\Users\\Erdal> ${input.value}`);
+
+            if (cmd === "clear" || cmd === "cls") {
+                output.innerText = "";
+            } else if (cmd === "calc") {
+                if(args.length === 4) {
+                    try { printToTerminal(`Sonuç: ${eval(args[1] + args[2] + args[3])}`); } 
+                    catch { printToTerminal("Hata: Geçersiz işlem."); }
+                } else { printToTerminal("Kullanım: calc 5 * 4"); }
+            } else if (cmd === "echo") {
+                printToTerminal(args.slice(1).join(' '));
+            } else if (commands[cmd]) {
+                const response = typeof commands[cmd] === 'function' ? commands[cmd]() : commands[cmd];
+                printToTerminal(response);
+            } else if (cmd !== "") {
+                printToTerminal(`'${cmd}' komutu tanınmıyor. Yardım için 'help' yazın.`);
+            }
+
+            input.value = "";
+            output.scrollTop = output.scrollHeight;
+        }
+    });
+
+    function printToTerminal(text) {
+        output.innerText += text + "\n";
+    }
+</script>
+
 </body>
 </html>
